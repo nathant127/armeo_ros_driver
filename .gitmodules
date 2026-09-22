@@ -1,0 +1,3 @@
+[submodule "xpctarget_api_cpp"]
+	path = xpctarget_api_cpp
+	url = git@github.com:nathant127/xpctarget_api_cpp.git
