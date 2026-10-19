@@ -9,6 +9,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
 
 
 add_subdirectory(xpctarget_api_cpp)
@@ -16,7 +18,7 @@ add_subdirectory(xpctarget_api_cpp)
 add_executable(armeo_ros_driver
     src/armeo_ros_driver.cpp
 )
-target_link_libraries(armeo_ros_driver xpcapi)
+target_link_libraries(armeo_ros_driver xpcapi Eigen3::Eigen)
 ament_target_dependencies(armeo_ros_driver rclcpp)
 
 target_include_directories(armeo_ros_driver PUBLIC

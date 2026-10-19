@@ -1,0 +1,26 @@
+polling_rate: 100
+
+# Publish Joint Angles
+publish_joint_angles: true
+
+# Publishes end effector Position (Reported from Armeo)
+publish_ee_pos: true
+# Publishes end effector Quaternion (Calculated via fkine)
+publish_ee_rot: true
+# Publishes end effector Pose 
+publish_ee_pose: true
+
+
+
+# Publish Joint Velocity (Reported from Armeo)
+publish_joint_vel: true
+# Publishes end effector Jacobian Matrix (Reported from Armeo)
+publish_jacobian: true
+# Publishes end effector velocity (Calculated via Jacobian)
+publish_ee_vel: true
+
+
+# Chose Controller
+controller_name: joint_torque
+
+
