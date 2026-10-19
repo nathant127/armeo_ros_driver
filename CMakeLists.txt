@@ -20,7 +20,7 @@ target_link_libraries(armeo_ros_driver xpcapi)
 ament_target_dependencies(armeo_ros_driver rclcpp)
 
 target_include_directories(armeo_ros_driver PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>
     $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
