@@ -23,4 +23,5 @@ private:
     std::shared_ptr<ArmeoState> state_;
     int xpc_port_;
 
+    rclcpp::TimerBase::SharedPtr update_timer_;
 };

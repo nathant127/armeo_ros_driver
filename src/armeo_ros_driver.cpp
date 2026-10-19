@@ -40,6 +40,14 @@ ArmeoRosDriver::ArmeoRosDriver() :
     xPCLoadApp(xpc_port_, path.c_str(), target_model);    
     // Start the app
     xPCStartApp(xpc_port_);
+
+    using namespace std::chrono_literals;
+    update_timer_ = this->create_wall_timer(
+        100ms, 
+        std::bind(&ArmeoRosDriver::update, this)
+    );
+
+    state_ = std::make_shared<ArmeoState>();
 }
 
 ArmeoRosDriver::~ArmeoRosDriver() {
@@ -80,7 +88,6 @@ static std::array<int, num_signals> generate_sig_ids(int port) {
 }
 
 void ArmeoRosDriver::update() {
-
     static std::array<int, num_signals> sig_ids = generate_sig_ids(this->xpc_port_);
     double sig_data[num_signals];
     xPCGetSignals(this->xpc_port_, num_signals, sig_ids.data(), sig_data);
@@ -106,6 +113,8 @@ void ArmeoRosDriver::update() {
     double* qv = &sig_data[46]; // joint velocities, size 7
     state_->joint_velocities << qv[0], qv[1], qv[2], qv[3], qv[4], qv[5];
     state_->gripper_joint_vel = qv[6];
+
+    RCLCPP_INFO(this->get_logger(), "Q: [%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f]", state_->joint_angles[0], state_->joint_angles[1], state_->joint_angles[2], state_->joint_angles[3], state_->joint_angles[4], state_->joint_angles[5], state_->joint_angles[6]);
 
 }
 
