@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 #include "controller.hpp"
+#include "fkine.hpp"
 
 using namespace xpcapi;
 
@@ -48,6 +49,8 @@ ArmeoRosDriver::ArmeoRosDriver() :
     );
 
     state_ = std::make_shared<ArmeoState>();
+
+    load_config();
 }
 
 ArmeoRosDriver::~ArmeoRosDriver() {
@@ -114,8 +117,15 @@ void ArmeoRosDriver::update() {
     state_->joint_velocities << qv[0], qv[1], qv[2], qv[3], qv[4], qv[5];
     state_->gripper_joint_vel = qv[6];
 
-    RCLCPP_INFO(this->get_logger(), "Q: [%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f]", state_->joint_angles[0], state_->joint_angles[1], state_->joint_angles[2], state_->joint_angles[3], state_->joint_angles[4], state_->joint_angles[5], state_->joint_angles[6]);
+    // RCLCPP_INFO(this->get_logger(), "Q: [%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f]", state_->joint_angles[0], state_->joint_angles[1], state_->joint_angles[2], state_->joint_angles[3], state_->joint_angles[4], state_->joint_angles[5], state_->joint_angles[6]);
 
+    // Perform calculations
+    state_->ee_velocities = state_->jacobian * state_->joint_velocities;
+    state_->ee_pose = fkine(state_->joint_angles);
+    state_->ee_rot = state_->ee_pose.block<3,3>(0,0); // Grab rotation matrix from pose
+
+    controller_->update();
+    publish_state();
 }
 
 void ArmeoRosDriver::load_config() {

@@ -1,0 +1,66 @@
+#pragma once
+
+#include "controller.hpp"
+#include "xpc_def.hpp"
+#include "xpcapi.hpp"
+
+#include <rclcpp/rclcpp.hpp>
+#include "std_msgs/msg/float64_multi_array.hpp"
+
+constexpr int torque_id_base = 467;
+
+
+class TorqueController : public ArmeoController {
+public:
+
+    TorqueController(std::shared_ptr<ArmeoState> state, int xpc_port, rclcpp::Node* node) :
+        ArmeoController(state, xpc_port)
+    {
+        sub_torque_cmd_ = this->create_subscriber<std_msgs::msg::Float64MultiArray>("torque_cmd", 10,
+            std::bind(&TorqueController::cmd_callback, this)
+        );
+
+        prev_cmd_.resize(7);
+        for (int i = 0; i < 7; i++) {
+            prev_cmd_[i] = 0.0;
+            xpcapi::xPCSetParam(this->xpc_port_, torque_id_base, &prev_cmd_[i]);
+        }
+
+        double buf;
+
+        buf = 0.0;
+        xpcapi::xPCSetParam(this->xpc_port_, SAFETY_ENABLE, &buf);
+        buf = OMDirectTorque;
+        xpcapi::xPCSetParam(this->xpc_port_, OP_MODE, &buf);
+    }
+
+    void update() {
+        if (!cmd_ready_) {
+            return;
+        }
+
+        if (cmd_buf_.data.size() != 7) {
+            return;
+        }
+
+        for (int i = 0; i < 7; i++) {
+            xpcapi::xPCSetParam(this->xpc_port_, torque_id_base, &cmd_buf_.data[i]);
+        }
+
+        prev_cmd_ = cmd_buf_.data;
+
+    }
+
+private:
+
+    void cmd_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
+        cmd_buf_ = *msg;
+        cmd_ready_ = true;
+    }
+
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr sub_torque_cmd_;
+    std_msgs::msg::Float64MultiArray cmd_buf_;
+    bool cmd_ready_ = false;
+
+    std::vector<double> prev_cmd_;
+}

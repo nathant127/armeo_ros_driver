@@ -24,4 +24,6 @@ private:
     int xpc_port_;
 
     rclcpp::TimerBase::SharedPtr update_timer_;
+
+    std::unique_ptr<ArmeoController> controller_;
 };

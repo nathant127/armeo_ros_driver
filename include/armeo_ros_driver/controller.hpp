@@ -36,4 +36,6 @@ public:
 private:
     std::shared_ptr<ArmeoState> state_;
     int xpc_port_;
+
+    rclcpp::Node* node_;
 };
