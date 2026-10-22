@@ -17,19 +17,19 @@
 #define REPLAY_SPEED 531
 
 
-class TorqueController : public ArmeoController {
+class PositionController : public ArmeoController {
 public:
 
-    TorqueController(std::shared_ptr<ArmeoState> state, int xpc_port, rclcpp::Node* node) :
+    PositionController(std::shared_ptr<ArmeoState> state, int xpc_port, rclcpp::Node* node) :
         ArmeoController(state, xpc_port),
         node_(node)
     {
         sub_targets_ = this->create_subscriber<armeo_msgs::msg::Trajectory>("trajectory", 10,
-            std::bind(&TorqueController::cmd_callback, std::placeholder::_1, this)
+            std::bind(&PositionController::cmd_callback, std::placeholder::_1, this)
         );
 
         sub_startstop_ = this->create_subscriber<std_msgs::msg::Bool>("startstop", 10,
-            std::bind(&TorqueController::startstop_callback, std::placeholder::_1, this)
+            std::bind(&PositionController::startstop_callback, std::placeholder::_1, this)
         );
 
         double buf;
@@ -45,19 +45,7 @@ public:
         xpcapi::xPCSetParam(this->xpc_port_, OP_MODE, &buf);
     }
 
-    static int get_target_id(int target_num, int joint_num) {
-        constexpr std::array<int, 20> offset_lookup = {
-            1,12,14,15,16,17,18,19,20,2,3,4,5,6,7,8,9,10,11,13
-        };
-        return get_num_targets_id(joint_num) + offset_lookup[target_num];
-    }
-
-    static int get_num_targets_id(int joint_num) {
-        constexpr std::array<int, 7> base_lookup = {
-            1659, 1681, 1703, 1725, 1747, 1769, 1791
-        };
-        return base_lookup[joint_num];
-    }
+    static void get_name() {return "position_controller";}
 
     void update() {
         if (!cmd_ready_) {
@@ -80,15 +68,26 @@ public:
             }
 
         }
-        
-
-
 
         target_set_ = true;
         cmd_ready_ = false;
     }
 
 private:
+
+    static int get_target_id(int target_num, int joint_num) {
+        constexpr std::array<int, 20> offset_lookup = {
+            1,12,14,15,16,17,18,19,20,2,3,4,5,6,7,8,9,10,11,13
+        };
+        return get_num_targets_id(joint_num) + offset_lookup[target_num];
+    }
+
+    static int get_num_targets_id(int joint_num) {
+        constexpr std::array<int, 7> base_lookup = {
+            1659, 1681, 1703, 1725, 1747, 1769, 1791
+        };
+        return base_lookup[joint_num];
+    }
 
     void cmd_callback(const armeo_msgs::msg::Trajectory::SharedPtr msg) {
         targets_buf_ = *msg;

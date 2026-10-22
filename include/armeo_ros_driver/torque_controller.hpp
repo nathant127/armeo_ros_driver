@@ -35,6 +35,8 @@ public:
         xpcapi::xPCSetParam(this->xpc_port_, OP_MODE, &buf);
     }
 
+    static void get_name() {return "torque_controller";}
+
     void update() {
         if (!cmd_valid_) {
             return;

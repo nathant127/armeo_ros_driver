@@ -9,6 +9,9 @@
 
 #include "fkine.hpp"
 
+#include "position_controller.hpp"
+#include "torque_controller.hpp"
+
 using namespace xpcapi;
 
 ArmeoRosDriver::ArmeoRosDriver() :
@@ -154,7 +157,16 @@ void ArmeoRosDriver::update() {
 }
 
 void ArmeoRosDriver::load_config() {
+    this->declare_parameter<std::string>("controller_name");
 
+    std::string controller_name = this->get_parameter("controller_name").as_string();
+
+    if (controller_name == TorqueController::get_name()) {
+        this->controller_ = std::make_shared<TorqueController>(this->state_, this->xpc_port_, this);
+    }
+    if (controller_name == PositionController::get_name()) {
+        this->controller_ = std::make_shared<PositionController>(this->state_, this->xpc_port_, this);
+    }
 }
 
 void ArmeoRosDriver::publish_state() {

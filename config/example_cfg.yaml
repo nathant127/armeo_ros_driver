@@ -21,6 +21,6 @@ publish_ee_vel: true
 
 
 # Chose Controller
-controller_name: joint_torque
+controller_name: position_controller
 
 

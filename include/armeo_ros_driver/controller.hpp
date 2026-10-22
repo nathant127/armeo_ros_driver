@@ -32,7 +32,6 @@ public:
     
     virtual void update() = 0;
 
-
 private:
     std::shared_ptr<ArmeoState> state_;
     int xpc_port_;
