@@ -11,9 +11,14 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 
 add_subdirectory(xpctarget_api_cpp)
+
+rosidl_generate_interfaces(armeo_msgs
+        "msg/XpcBridgedData.msg"
+)
 
 add_executable(armeo_ros_driver
     src/armeo_ros_driver.cpp

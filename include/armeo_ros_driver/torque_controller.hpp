@@ -18,7 +18,7 @@ public:
         node_(node)
     {
         sub_torque_cmd_ = this->create_subscriber<std_msgs::msg::Float64MultiArray>("torque_cmd", 10,
-            std::bind(&TorqueController::cmd_callback, this)
+            std::bind(&TorqueController::cmd_callback, std::placeholder::_1, this)
         );
 
         prev_cmd_.resize(7);
