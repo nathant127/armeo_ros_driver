@@ -14,7 +14,8 @@ class TorqueController : public ArmeoController {
 public:
 
     TorqueController(std::shared_ptr<ArmeoState> state, int xpc_port, rclcpp::Node* node) :
-        ArmeoController(state, xpc_port)
+        ArmeoController(state, xpc_port),
+        node_(node)
     {
         sub_torque_cmd_ = this->create_subscriber<std_msgs::msg::Float64MultiArray>("torque_cmd", 10,
             std::bind(&TorqueController::cmd_callback, this)
@@ -35,11 +36,25 @@ public:
     }
 
     void update() {
-        if (!cmd_ready_) {
+        if (!cmd_valid_) {
             return;
+        }
+        if (!cmd_ready_) {
+            auto duration = node_->now() - cmd_buf_.header.stamp;
+            if (duration.nanoseconds() < 500000000ll) {
+                return;
+            }
+
+            for (int i = 0; i < 7; i++) {
+                prev_cmd_[i] = 0.0;
+                xpcapi::xPCSetParam(this->xpc_port_, torque_id_base, &prev_cmd_[i]);
+            }
+
+            cmd_valid_ = false;
         }
 
         if (cmd_buf_.data.size() != 7) {
+            cmd_ready_ = false;
             return;
         }
 
@@ -49,6 +64,8 @@ public:
 
         prev_cmd_ = cmd_buf_.data;
 
+        cmd_ready_ = false;
+
     }
 
 private:
@@ -56,11 +73,15 @@ private:
     void cmd_callback(const std_msgs::msg::Float64MultiArray::SharedPtr msg) {
         cmd_buf_ = *msg;
         cmd_ready_ = true;
+        cmd_valid_ = true;
     }
 
     rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr sub_torque_cmd_;
     std_msgs::msg::Float64MultiArray cmd_buf_;
     bool cmd_ready_ = false;
+    bool cmd_valid_ = false;
 
     std::vector<double> prev_cmd_;
+
+    rclcpp::Node* node_;
 }

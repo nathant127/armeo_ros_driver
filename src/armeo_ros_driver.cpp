@@ -1,20 +1,15 @@
 #include "armeo_ros_driver.hpp"
 #include "xpcapi.hpp"
 
-#include <string>
-#include <array>
-
-#include <rclcpp/rclcpp.hpp>
 #include <ament_index_cpp/get_package_share_directory.hpp>
+#include "std_msgs/msg/multi_array_dimension.hpp"
 
 #include <exception>
 #include <stdexcept>
 
-#include "controller.hpp"
 #include "fkine.hpp"
 
 using namespace xpcapi;
-
 
 ArmeoRosDriver::ArmeoRosDriver() :
     Node("ArmeoRosDriver")
@@ -47,6 +42,34 @@ ArmeoRosDriver::ArmeoRosDriver() :
         100ms, 
         std::bind(&ArmeoRosDriver::update, this)
     );
+
+    joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+    joint_states_.name = joint_names_;
+    joint_states_.position.resize(7, 0.0);
+    joint_states_.velocity.resize(7, 0.0);
+    joint_states_.effort.resize(7, 0.0);
+
+
+    // Jacobian Publisher
+    jacobian_publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("jacobian", 10);
+
+    std_msgs::msg::MultiArrayDimension dim1;
+    dim1.label = "rows";
+    dim1.size = 6;
+    dim1.stride = 36;
+
+    std_msgs::msg::MultiArrayDimension dim2;
+    dim2.label = "columns";
+    dim2.size = 6;
+    dim2.stride = 6;
+    jacobian_msg_.layout.dim.push_back(dim1);
+    jacobian_msg_.layout.dim.push_back(dim2);
+    jacobian_msg_.layout.data_offset = 0;
+    jacobian_msg_.data.resize(rows * cols, 0.0);
+
+    pose_publisher_ = this->create_publisher<geometry_msgs::msg::Pose>("ee_pose", 10);
+
+    twist_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("ee_vel", 10);
 
     state_ = std::make_shared<ArmeoState>();
 
@@ -124,7 +147,9 @@ void ArmeoRosDriver::update() {
     state_->ee_pose = fkine(state_->joint_angles);
     state_->ee_rot = state_->ee_pose.block<3,3>(0,0); // Grab rotation matrix from pose
 
-    controller_->update();
+    if (controller_ != nullptr) {
+        controller_->update();
+    }
     publish_state();
 }
 
@@ -133,6 +158,54 @@ void ArmeoRosDriver::load_config() {
 }
 
 void ArmeoRosDriver::publish_state() {
+
+    // Joint States
+
+    joint_states_.header.stamp = this->get_clock()->now();
+    for (int i = 0; i < 6; i++) {
+        joint_states_.position[i] = state_->joint_angles[i];
+        joint_states_.velocity[i] = state_->joint_velocities[i];
+    }
+    joint_states_.position[6] = state_->gripper_joint_angle;
+    joint_states_.velocity[6] = state_->gripper_joint_vel;
+    joint_state_publisher_->publish(joint_states_);
+
+    // Jacobian
+
+    int index = 0;
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            jacobian_msg_.data[index++] = state_->jacobian(i, j);
+        }
+    }
+
+    jacobian_publisher_->publish(jacobian_msg_);
+
+    // Pose
+
+    geometry_msgs::msg::Pose pose_msg;
+    pose_msg.position.x = state_->ee_position[0];
+    pose_msg.position.y = state_->ee_position[1];
+    pose_msg.position.z = state_->ee_position[2];
+    pose_msg.orientation.x = state_->ee_rot.x();
+    pose_msg.orientation.y = state_->ee_rot.y();
+    pose_msg.orientation.z = state_->ee_rot.z();
+    pose_msg.orientation.w = state_->ee_rot.w();
+
+    pose_publisher_->publish(pose_msg);
+
+    geometry_msgs::msg::Twist twist_msg;
+    twist_msg.linear.x = state_->ee_velocities[0];
+    twist_msg.linear.y = state_->ee_velocities[1];
+    twist_msg.linear.z = state_->ee_velocities[2];
+    twist_msg.angular.x = state_->ee_velocities[3];
+    twist_msg.angular.y = state_->ee_velocities[4];
+    twist_msg.angular.z = state_->ee_velocities[5];
+
+    twist_publisher_->publish(twist_msg);
+
+
+
 
 }
 
