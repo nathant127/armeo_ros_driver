@@ -68,7 +68,7 @@ ArmeoRosDriver::ArmeoRosDriver() :
     jacobian_msg_.layout.dim.push_back(dim1);
     jacobian_msg_.layout.dim.push_back(dim2);
     jacobian_msg_.layout.data_offset = 0;
-    jacobian_msg_.data.resize(rows * cols, 0.0);
+    jacobian_msg_.data.resize(36, 0.0);
 
     pose_publisher_ = this->create_publisher<geometry_msgs::msg::Pose>("ee_pose", 10);
 
@@ -162,10 +162,10 @@ void ArmeoRosDriver::load_config() {
     std::string controller_name = this->get_parameter("controller_name").as_string();
 
     if (controller_name == TorqueController::get_name()) {
-        this->controller_ = std::make_shared<TorqueController>(this->state_, this->xpc_port_, this);
+        this->controller_ = std::make_unique<TorqueController>(this->state_, this->xpc_port_, this);
     }
     if (controller_name == PositionController::get_name()) {
-        this->controller_ = std::make_shared<PositionController>(this->state_, this->xpc_port_, this);
+        this->controller_ = std::make_unique<PositionController>(this->state_, this->xpc_port_, this);
     }
 }
 

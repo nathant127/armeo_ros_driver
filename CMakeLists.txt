@@ -12,19 +12,19 @@ find_package(rclcpp REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(armeo_msgs REQUIRED)
 
 
 add_subdirectory(xpctarget_api_cpp)
-
-rosidl_generate_interfaces(armeo_msgs
-        "msg/XpcBridgedData.msg"
-)
 
 add_executable(armeo_ros_driver
     src/armeo_ros_driver.cpp
 )
 target_link_libraries(armeo_ros_driver xpcapi Eigen3::Eigen)
-ament_target_dependencies(armeo_ros_driver rclcpp)
+ament_target_dependencies(armeo_ros_driver rclcpp sensor_msgs geometry_msgs std_msgs armeo_msgs)
 
 target_include_directories(armeo_ros_driver PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}>

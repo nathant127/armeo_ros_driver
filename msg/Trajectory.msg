@@ -1,1 +1,0 @@
-JointTrajectory[7] trajectories

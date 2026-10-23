@@ -11,25 +11,16 @@ struct DHParam {
     double theta; // Joint angle (radians) - Variable for Revolute joints
 };
 
-constexpr std::vector<DHParam> robot_dh = {
-    {-0.0000,  0.0000,  1.5708, -0.0000, false},
-    { 0.0000,  0.0000, -1.5708,  3.1416, false},
-    {-0.0000,  0.2490,  1.5708, -0.0000, false},
-    {-0.0000, -0.0000, -1.5708, -0.0000, false},
-    { 0.0000,  0.2520,  1.5708,  0.0000, false},
-    { 0.0840, -0.0000,  0.0000,  1.5708, false}
+const std::vector<DHParam> robot_dh = {
+    DHParam {-0.0000,  0.0000,  1.5708, -0.0000},
+    DHParam { 0.0000,  0.0000, -1.5708,  3.1416},
+    DHParam {-0.0000,  0.2490,  1.5708, -0.0000},
+    DHParam {-0.0000, -0.0000, -1.5708, -0.0000},
+    DHParam { 0.0000,  0.2520,  1.5708,  0.0000},
+    DHParam { 0.0840, -0.0000,  0.0000,  1.5708}
 };
 
 using Transform = Eigen::Matrix<double, 4, 4>;
-
-Transform fkine(const Eigen::Vector<double, 6>& joint_states) {
-    Transform T = Transform::Identity();
-    for (size_t i = 0; i < robot_dh.size(); ++i) {
-        T = T * computeLinkTransform(robot_dh[i], joint_states[i]);
-    }
-    return T;
-}
-
 Transform computeLinkTransform(const DHParam& param, double joint_input) {
     // Determine active parameters depending on joint type
     double theta = param.theta + joint_input;
@@ -41,12 +32,22 @@ Transform computeLinkTransform(const DHParam& param, double joint_input) {
     double st = sin(theta);
     double ca = cos(alpha);
     double sa = sin(alpha);
+    Transform T;
 
+    T << 
+        ct, -st * ca,  st * sa, a * ct,
+        st,  ct * ca, -ct * sa, a * st,
+        0.0,    sa,       ca,      d  ,
+        0.0,   0.0,      0.0,     1.0 ;
     // Standard DH formulation matrix
-    return {
-        {ct, -st * ca,  st * sa, a * ct},
-        {st,  ct * ca, -ct * sa, a * st},
-        {0.0,    sa,       ca,      d  },
-        {0.0,   0.0,      0.0,     1.0 }
-    };
+    return T;
 }
+
+Transform fkine(const Eigen::Vector<double, 6>& joint_states) {
+    Transform T = Transform::Identity();
+    for (size_t i = 0; i < robot_dh.size(); ++i) {
+        T = T * computeLinkTransform(robot_dh[i], joint_states[i]);
+    }
+    return T;
+}
+

@@ -38,7 +38,7 @@ private:
 
     std::unique_ptr<ArmeoController> controller_;
 
-    constexpr std::vector<std::string> joint_names_ = {
+    const std::vector<std::string> joint_names_ = {
         "Base joint",
     	"Shoulder joint",
     	"Shoulder twist joint",

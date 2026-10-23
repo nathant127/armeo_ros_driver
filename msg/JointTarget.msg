@@ -1,2 +1,0 @@
-float64 joint_angle
-float64 duration_sec
