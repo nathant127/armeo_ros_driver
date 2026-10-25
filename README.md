@@ -49,7 +49,7 @@ Once the controller is loaded, the robot will default to a torque of 0, you shou
 
 # Build/Installation
 
-## Dependancies
+## Dependencies
 
 - [ROS2 Humble](https://docs.ros.org/en/humble/Installation.html)
 - Eigen3
