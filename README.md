@@ -78,6 +78,19 @@ colcon build --symlink-install
 
 # Usage
 
+Plug in the Armeo Power Target PC to your device over ethernet, the Armeo Power Target PC address is 10.10.10.11:22222. 
+
+So that your device knows how to route traffic to the Armeo Power's Subnet, ensure that the connection you use is set to a static IP with subnet 10.10.10.XX, preferably 10.10.10.10 as that is the address that the offical Armeo Power PC uses to conenct.
+How this is done depends on the operating system, but you can do this with nmcli like so:
+```bash
+sudo nmcli connection modify "ETHERNET CONNECTION NAME" \
+  ipv4.method manual \
+  ipv4.addresses "10.10.10.10/24" \
+  ipv4.gateway "" \
+  ipv4.never-default yes
+```
+
+Run the package with a specific controller (default controller is none)
 ```bash
 ros2 run armeo_ros_driver armeo_ros_driver --ros-args -p controller_name:=torque_controller 
 ```
