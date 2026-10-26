@@ -23,6 +23,8 @@ public:
 
 private:
 
+    void initialize_armeo();
+
     void update();
 
     void publish_state();

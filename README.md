@@ -94,3 +94,5 @@ Run the package with a specific controller (default controller is none)
 ```bash
 ros2 run armeo_ros_driver armeo_ros_driver --ros-args -p controller_name:=torque_controller 
 ```
+
+Once running, if a controller is loaded, it will ask you to press/release estop to ensure it is working, you can disable this check by passing param `skip_estop_check:=true`
