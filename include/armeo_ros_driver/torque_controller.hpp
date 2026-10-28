@@ -10,6 +10,7 @@
 constexpr int torque_id_base = 467;
 
 
+
 class TorqueController : public ArmeoController {
 public:
 
@@ -47,21 +48,27 @@ public:
                 return;
             }
 
+            RCLCPP_INFO(node_->get_logger(), "Invalidating Torque Command");
+
             for (int i = 0; i < 7; i++) {
                 prev_cmd_[i] = 0.0;
-                xpcapi::xPCSetParam(this->xpc_port_, torque_id_base, &prev_cmd_[i]);
+                xpcapi::xPCSetParam(this->xpc_port_, torque_id_base + i, &prev_cmd_[i]);
             }
 
             cmd_valid_ = false;
+            return;
         }
 
         if (cmd_buf_.data.size() != 7) {
             cmd_ready_ = false;
+            RCLCPP_ERROR(node_->get_logger(), "Invalid Torque Command");
             return;
         }
 
+        RCLCPP_INFO(node_->get_logger(), "Sending Torque Command");
+
         for (int i = 0; i < 7; i++) {
-            xpcapi::xPCSetParam(this->xpc_port_, torque_id_base, &cmd_buf_.data[i]);
+            xpcapi::xPCSetParam(this->xpc_port_, torque_id_base + i, &cmd_buf_.data[i]);
         }
 
         prev_cmd_ = cmd_buf_.data;
@@ -73,6 +80,7 @@ public:
 private:
 
     void cmd_callback(const std_msgs::msg::Float64MultiArray& msg) {
+        RCLCPP_INFO(node_->get_logger(), "Got msg");
         cmd_buf_ = msg;
         cmd_stamp_ = node_->now();
         cmd_ready_ = true;

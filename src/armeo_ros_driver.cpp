@@ -91,11 +91,8 @@ ArmeoRosDriver::ArmeoRosDriver() :
 
     state_ = std::make_shared<ArmeoState>();
 
+    initialize_armeo();
     load_config();
-
-    if (controller_ != nullptr) {
-        initialize_armeo();
-    }
 }
 
 ArmeoRosDriver::~ArmeoRosDriver() {
@@ -151,21 +148,21 @@ void ArmeoRosDriver::initialize_armeo() {
 
     SP(OP_MODE, OMEStopTest);
 
-    bool check_estop = this->declare_parameter<bool>("skip_estop_check", false);
+    bool skip_check_estop = this->declare_parameter<bool>("skip_estop_check", false);
     if (is_estop_pressed()) {
-        RCLCPP_INFO(this->get_logger(), "Please release the estop\n");
+        RCLCPP_INFO(this->get_logger(), "Please release the estop");
         while(is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
-    if (check_estop) {
-        RCLCPP_INFO(this->get_logger(), "Please press the estop\n");
+    if (!skip_check_estop) {
+        RCLCPP_INFO(this->get_logger(), "Please press the estop");
         while(!is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
 
-        RCLCPP_INFO(this->get_logger(), "Please release the estop again\n");
+        RCLCPP_INFO(this->get_logger(), "Please release the estop again");
         while(is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
@@ -206,8 +203,6 @@ void ArmeoRosDriver::initialize_armeo() {
     SP(CALIBRATE_ENCODERS, 0.0);
     SP(SEND_UDP_PACKETS, 1.0);
     SP(MANOVO_POWER, 1.0);
-
-    SP(SAFETY_ENABLE, 0.0);
 }
 
 constexpr int num_signals = 7 + 3 + 36 + 7;
