@@ -1,7 +1,9 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from armeo_msgs.msg import Trajectory, JointTrajectory, JointTarget  # Replace with your custom message if needed
 from std_msgs.msg import Bool
+from sensor_msgs.msg import JointState
 import time
 
 class MinimalPublisher(Node):
@@ -14,26 +16,31 @@ class MinimalPublisher(Node):
         # The queue size is set to 10
         self.publisher_ = self.create_publisher(Trajectory, '/trajectory', 10)
         self.pub_start = self.create_publisher(Bool, '/startstop', 10)
+
+        # Subscribe to the joint states to get the current joint angles
+        self.latest_joint_state = None
+        self.sub_joint_states = self.create_subscription(
+            JointState, '/joint_states', self.joint_state_callback, qos_profile_sensor_data)
         
         # Create a timer that triggers the callback every 0.5 seconds
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
+    def joint_state_callback(self, msg):
+        self.latest_joint_state = msg
+
     def timer_callback(self):
+        # Wait until we have received a joint state with at least 7 joints
+        if self.latest_joint_state is None or len(self.latest_joint_state.position) < 7:
+            self.get_logger().warn('Waiting for /joint_states...')
+            return
+
         msg = Trajectory()
         msg.trajectories = [JointTrajectory(), JointTrajectory(), JointTrajectory(), JointTrajectory(), JointTrajectory(), JointTrajectory(), JointTrajectory()]
 
 
-        ja = [
-            0.6369538591623518,
-            0.6843676795835144,
-            -0.004578024813871472,
-            -0.01506100862381829,
-            -1.6368553109973638,
-            -0.07223965371533787,
-            0.035914781224870025
-        ]
+        ja = list(self.latest_joint_state.position[:7])
         
         j1_traj = JointTrajectory()
         j1_traj.targets = [JointTarget(), JointTarget()]

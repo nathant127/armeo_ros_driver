@@ -48,8 +48,6 @@ public:
                 return;
             }
 
-            RCLCPP_INFO(node_->get_logger(), "Invalidating Torque Command");
-
             for (int i = 0; i < 7; i++) {
                 prev_cmd_[i] = 0.0;
                 xpcapi::xPCSetParam(this->xpc_port_, torque_id_base + i, &prev_cmd_[i]);
@@ -65,8 +63,6 @@ public:
             return;
         }
 
-        RCLCPP_INFO(node_->get_logger(), "Sending Torque Command");
-
         for (int i = 0; i < 7; i++) {
             xpcapi::xPCSetParam(this->xpc_port_, torque_id_base + i, &cmd_buf_.data[i]);
         }
@@ -80,7 +76,6 @@ public:
 private:
 
     void cmd_callback(const std_msgs::msg::Float64MultiArray& msg) {
-        RCLCPP_INFO(node_->get_logger(), "Got msg");
         cmd_buf_ = msg;
         cmd_stamp_ = node_->now();
         cmd_ready_ = true;

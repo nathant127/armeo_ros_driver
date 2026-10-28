@@ -96,7 +96,6 @@ private:
 
     void startstop_callback(const std_msgs::msg::Bool& msg) {
         if (target_set_ && msg.data) {
-            RCLCPP_INFO(node_->get_logger(), "Start");
             double buf = 1.0;
             xpcapi::xPCSetParam(this->xpc_port_, REPLAY, &buf);
         }
