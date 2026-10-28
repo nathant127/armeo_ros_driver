@@ -31,6 +31,9 @@ private:
 
     void load_config();
 
+    void SP(int idx, double val);
+    bool is_estop_pressed();
+
 private:
 
     std::shared_ptr<ArmeoState> state_;

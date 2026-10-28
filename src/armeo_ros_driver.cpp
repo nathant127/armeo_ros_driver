@@ -135,79 +135,79 @@ const std::array<SensorQ, 22> sensor_qs = {
 };
 
 // Helper for single elem params
-inline void SP(int port, int idx, double val) {
-    xPCSetParam(port, idx, &val);
+void ArmeoRosDriver::SP(int idx, double val) {
+    xPCSetParam(this->xpc_port_, idx, &val);
 }
 
 // Helper for checking estop state
-inline bool is_estop_pressed(int port) {
-    return ((uint32_t)xPCGetSignal(port, 696)) & (1 << STATUS_ESTOP_BIT);
+bool ArmeoRosDriver::is_estop_pressed() {
+    return ((uint32_t)xPCGetSignal(this->xpc_port_, 696)) & (1 << STATUS_ESTOP_BIT);
 }
 
 void ArmeoRosDriver::initialize_armeo() {
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, SAFETY_RESET, 1.0);
-    SP(port, SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 1.0);
+    SP(SAFETY_RESET, 0.0);
 
-    SP(port, OP_MODE, OMEStopTest);
+    SP(OP_MODE, OMEStopTest);
 
     bool check_estop = this->declare_parameter<bool>("skip_estop_check", false);
-    if (is_estop_pressed(port)) {
+    if (is_estop_pressed()) {
         RCLCPP_INFO(this->get_logger(), "Please release the estop\n");
-        while(is_estop_pressed(port)) {
+        while(is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
     if (check_estop) {
         RCLCPP_INFO(this->get_logger(), "Please press the estop\n");
-        while(!is_estop_pressed(port)) {
+        while(!is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
 
         RCLCPP_INFO(this->get_logger(), "Please release the estop again\n");
-        while(is_estop_pressed(port)) {
+        while(is_estop_pressed()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
-    SP(port, SAFETY_ENABLE, 1.0);
+    SP(SAFETY_ENABLE, 1.0);
     // Calib encoders
-    SP(port, CALIBRATE_ENCODERS, 0.0);
-    SP(port, CALIBRATE_ENCODERS, 1.0);
-    SP(port, CALIBRATE_ENCODERS, 0.0);
+    SP(CALIBRATE_ENCODERS, 0.0);
+    SP(CALIBRATE_ENCODERS, 1.0);
+    SP(CALIBRATE_ENCODERS, 0.0);
 
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, SAFETY_RESET, 1.0);
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, SAFETY_RESET, 1.0);
-    SP(port, SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 1.0);
+    SP(SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 1.0);
+    SP(SAFETY_RESET, 0.0);
 
-    SP(port, OP_MODE, OMWatchdogTest);
-    while (xPCGetSignal(port, S_WATCHDOG_OK) != 1.0) {
-        std::this_thread::sleep_for(10ms);
+    SP(OP_MODE, OMWatchdogTest);
+    while (xPCGetSignal(this->xpc_port_, S_WATCHDOG_OK) != 1.0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, SAFETY_RESET, 1.0);
-    SP(port, AC_WATCHDOG, 0.0);
-    SP(port, SAFETY_RESET, 0.0);
-    SP(port, OP_MODE, OMEStopTest);
+    SP(SAFETY_RESET, 0.0);
+    SP(SAFETY_RESET, 1.0);
+    SP(AC_WATCHDOG, 0.0);
+    SP(SAFETY_RESET, 0.0);
+    SP(OP_MODE, OMEStopTest);
 
     // Set sensor values
     for (size_t i = 0; i < sensor_qs.size(); i++) {
-        xPCSetParam(port, sensor_qs[i].param_id, sensor_qs[i].param_vals);
+        xPCSetParam(this->xpc_port_, sensor_qs[i].param_id, sensor_qs[i].param_vals);
     }
 
-    SP(port, CALIBRATE_ENCODERS, 0.0);
-    SP(port, CALIBRATE_ENCODERS, 1.0);
-    SP(port, AC_WATCHDOG, 1.0);
-    SP(port, CALIBRATE_ENCODERS, 0.0);
-    SP(port, SEND_UDP_PACKETS, 1.0);
-    SP(port, MANOVO_POWER, 1.0);
+    SP(CALIBRATE_ENCODERS, 0.0);
+    SP(CALIBRATE_ENCODERS, 1.0);
+    SP(AC_WATCHDOG, 1.0);
+    SP(CALIBRATE_ENCODERS, 0.0);
+    SP(SEND_UDP_PACKETS, 1.0);
+    SP(MANOVO_POWER, 1.0);
 
-    SP(port, SAFETY_ENABLE, 0.0);
+    SP(SAFETY_ENABLE, 0.0);
 }
 
 constexpr int num_signals = 7 + 3 + 36 + 7;
