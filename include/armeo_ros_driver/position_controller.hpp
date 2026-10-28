@@ -91,12 +91,12 @@ private:
 
     void cmd_callback(const armeo_msgs::msg::Trajectory& msg) {
         targets_buf_ = msg;
-        cmd_stamp_ = node_->now();
         cmd_ready_ = true;
     }
 
     void startstop_callback(const std_msgs::msg::Bool& msg) {
         if (target_set_ && msg.data) {
+            RCLCPP_INFO(node_->get_logger(), "Start");
             double buf = 1.0;
             xpcapi::xPCSetParam(this->xpc_port_, REPLAY, &buf);
         }
@@ -109,7 +109,6 @@ private:
     rclcpp::Subscription<armeo_msgs::msg::Trajectory>::SharedPtr sub_targets_;
     armeo_msgs::msg::Trajectory targets_buf_;
     bool target_set_ = false;
-    rclcpp::Time cmd_stamp_;
     bool cmd_ready_ = false;
 
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_startstop_;
